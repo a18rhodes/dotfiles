@@ -5,7 +5,7 @@ PROJECT_ROOT=$(find /workspaces -maxdepth 1 -mindepth 1 -type d | head -n 1)
 if [ -n "$PROJECT_ROOT" ]; then
     echo "Found project root at: $PROJECT_ROOT"
     mkdir -p "$PROJECT_ROOT/.github"
-    ln -sf "$PROJECT_ROOT/.github/copilot-instructions.md" ~/dotfiles/copilot-instructions.md
+    ln -sf ~/dotfiles/.github/copilot-instructions.md "$PROJECT_ROOT/.github/copilot-instructions.md"
     echo "Copilot instructions injected."
     GITIGNORE="$PROJECT_ROOT/.gitignore"
     if [ -f "$GITIGNORE" ]; then
