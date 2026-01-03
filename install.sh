@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Symlink bashrc to the home directory
 ln -sf ~/dotfiles/.bashrc ~/.bashrc
 
-# Source it immediately so it takes effect
-source ~/.bashrc
+git config --global include.path "~/dotfiles/.gitconfig"
 
-echo "Dotfiles installed!"
+source ~/.bashrc
+echo "Dotfiles and Git config installed!"

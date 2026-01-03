@@ -1,0 +1,14 @@
+# dotfiles/.gitconfig
+
+[init]
+    defaultBranch = main
+
+[core]
+    editor = code --wait
+
+[alias]
+    unstage = reset HEAD --
+
+[user]
+    name = Austin Rhodes
+    email = a18rhodes@gmail.com
