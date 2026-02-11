@@ -2,6 +2,7 @@
 
 ln -sf ~/dotfiles/.bashrc ~/.bashrc
 ln -sf ~/dotfiles/.vimrc ~/.vimrc
+ln -sf ~/dotfiles/.tmux.conf ~/.tmux.conf
 
 PROJECT_ROOT=$(find /workspaces -maxdepth 1 -mindepth 1 -type d | head -n 1)
 if [ -n "$PROJECT_ROOT" ]; then
