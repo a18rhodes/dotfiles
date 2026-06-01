@@ -7,11 +7,20 @@ eval "$(dircolors -b)"
 alias ls='ls $LS_OPTIONS'
 alias ll='ls $LS_OPTIONS -lahtr'
 alias l='ls $LS_OPTIONS -lA'
+alias back='popd 2>&1 > /dev/null'
+alias cd-builtin='builtin cd'
 
 if [[ $- = *i* ]]; then
     bind '"\e[A": history-search-backward'
     bind '"\e[B": history-search-forward'
 fi
+cd (){
+    if [ -z "$1" ]; then
+        pushd ~ 2>&1 > /dev/null
+    else
+        pushd "$1" 2>&1 > /dev/null
+    fi
+}
 
 
 # Make the prompt nice (User@Host:CurrentDir)
