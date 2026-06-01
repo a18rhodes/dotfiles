@@ -1,6 +1,6 @@
 export TERM=xterm-256color
 export LS_OPTIONS='--color=auto'
-eval "$(dircolors)"
+eval "$(dircolors -b)"
 alias ls='ls $LS_OPTIONS'
 alias ll='ls $LS_OPTIONS -lahtr'
 alias l='ls $LS_OPTIONS -lA'
