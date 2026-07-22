@@ -1,8 +1,11 @@
 export TERM=xterm-256color
 export LS_OPTIONS='--color=auto'
-# Devcontainer can inject empty GIT_AUTHOR_* vars that override git config
+# Codespaces/devcontainers can inject empty GIT_AUTHOR_*/GIT_COMMITTER_* vars
+# that override gitconfig identity; drop the empty ones so .gitconfig wins.
 [ -z "${GIT_AUTHOR_NAME:-}" ] && unset GIT_AUTHOR_NAME
 [ -z "${GIT_AUTHOR_EMAIL:-}" ] && unset GIT_AUTHOR_EMAIL
+[ -z "${GIT_COMMITTER_NAME:-}" ] && unset GIT_COMMITTER_NAME
+[ -z "${GIT_COMMITTER_EMAIL:-}" ] && unset GIT_COMMITTER_EMAIL
 eval "$(dircolors -b)"
 alias ls='ls $LS_OPTIONS'
 alias ll='ls $LS_OPTIONS -lahtr'
