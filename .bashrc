@@ -12,6 +12,7 @@ alias ll='ls $LS_OPTIONS -lahtr'
 alias l='ls $LS_OPTIONS -lA'
 alias back='popd 2>&1 > /dev/null'
 alias cd-builtin='builtin cd'
+alias v='vim'
 
 if [[ $- = *i* ]]; then
     bind '"\e[A": history-search-backward'
