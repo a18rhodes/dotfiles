@@ -14,6 +14,13 @@ chmod 700 ~/.ssh
 ln -sf "$DOTFILES/ssh/git_signing.pub" ~/.ssh/git_signing.pub
 ln -sf "$DOTFILES/ssh/allowed_signers" ~/.ssh/allowed_signers
 
+mkdir -p ~/.config/systemd/user
+ln -sf "$DOTFILES/systemd/ssh-agent.service" ~/.config/systemd/user/ssh-agent.service
+if systemctl --user is-system-running >/dev/null 2>&1; then
+    systemctl --user enable --now ssh-agent.service
+    echo "ssh-agent service enabled."
+fi
+
 mkdir -p ~/.claude
 if [ ! -f "$CLAUDE_SETTINGS" ]; then
     cp "$CLAUDE_TEMPLATE" "$CLAUDE_SETTINGS"

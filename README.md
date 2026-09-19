@@ -12,6 +12,9 @@ Personal shell, editor, and AI-agent configuration, kept in one place and re-app
 | `.gitconfig` | included from `~/.gitconfig` via `include.path` |
 | `claude-settings.json` | merged into `~/.claude/settings.json` (see below) |
 | `agent-instructions.md` | projected into a target project (see below) |
+| `ssh/git_signing.pub` | `~/.ssh/git_signing.pub` |
+| `ssh/allowed_signers` | `~/.ssh/allowed_signers` |
+| `systemd/ssh-agent.service` | `~/.config/systemd/user/ssh-agent.service` |
 
 `install.sh` does all of the linking. It is idempotent: re-running it just re-points the symlinks, so it is safe to run on every shell start, container create, or rebuild.
 
@@ -41,30 +44,55 @@ The merge tries `jq` first, then `python3`, since either is enough for the flat,
 
 ### Devcontainer signing
 
-The private key never enters the container. Instead, the host's `gpg-agent` SSH socket is bind-mounted into the container, and `SSH_AUTH_SOCK` is set to point at it. Git in the container signs via the forwarded socket.
+The private key never enters the container. Instead, a dedicated `ssh-agent` runs on the WSL host and its socket is bind-mounted into the container. Git in the container signs via the forwarded socket — the private key bytes never leave the host.
 
-The socket path is hardcoded rather than using `${localEnv:SSH_AUTH_SOCK}` because VS Code leaves that variable empty when it cold-launches a devcontainer without a prior WSL terminal session.
+The socket path is hardcoded rather than using `${localEnv:SSH_AUTH_SOCK}` because VS Code leaves that variable empty when it cold-launches a devcontainer without a prior WSL terminal session. `loginctl enable-linger` (see below) ensures the agent is running from WSL boot so the socket is always there when VS Code arrives.
 
-Add these two keys to your **personal, gitignored** `devcontainer.json` override (not the shared base — the mount path is machine-specific and will break teammates who don't have this setup):
+Add these two keys to your **personal, gitignored** `devcontainer.json` override for each project (not the shared base — the mount path is machine-specific and will break teammates who don't have this setup):
 
 ```jsonc
 "mounts": [
-  "source=/run/user/1000/gnupg/S.gpg-agent.ssh,target=/run/ssh-agent.sock,type=bind"
+  "source=/run/user/1000/ssh-agent.socket,target=/run/ssh-agent.sock,type=bind"
 ],
 "remoteEnv": {
   "SSH_AUTH_SOCK": "/run/ssh-agent.sock"
 }
 ```
 
+Then rebuild the container. The `.bashrc` guard leaves `SSH_AUTH_SOCK` alone when the container's `remoteEnv` value already points at a live socket, so the host path never overrides the container path.
+
 ### One-time host setup (WSL2)
 
-Run this once on the WSL host so the agent socket is available from WSL boot — before any login session, which is when VS Code cold-launches:
+Do these steps once on the WSL host. Containers pick up signing automatically after that.
+
+**1. Generate the signing key** (skip if `~/.ssh/git_signing` already exists):
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/git_signing -C "git signing" -N ""
+```
+
+**2. Clone and run `install.sh` on the host** — this is separate from the container install. It symlinks the systemd unit and enables the ssh-agent service:
+
+```bash
+git clone git@github.com:a18rhodes/dotfiles.git ~/dotfiles
+~/dotfiles/install.sh
+```
+
+**3. Enable linger** so the ssh-agent service starts at WSL boot without requiring an interactive login:
 
 ```bash
 loginctl enable-linger $USER
 ```
 
-Then register `ssh/git_signing.pub` on GitHub as a **Signing Key** (Settings → SSH and GPG keys → New SSH key, Key type: Signing Key). This is separate from any authentication key you may already have there.
+**4. Load the signing key into the agent:**
+
+```bash
+ssh-add ~/.ssh/git_signing
+```
+
+Subsequent shells do this automatically via `.bashrc`. After a WSL restart the service comes back up on its own, but the key needs to be re-added the first time you open a terminal (`.bashrc` handles it).
+
+**5. Register the public key on GitHub** as a **Signing Key** (Settings → SSH and GPG keys → New SSH key, Key type: Signing Key). This is separate from any authentication key already there.
 
 ## Installation
 
