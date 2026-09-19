@@ -1,11 +1,53 @@
 #!/bin/bash
 
+CLAUDE_SETTINGS=~/.claude/settings.json
+CLAUDE_TEMPLATE="$DOTFILES/claude-settings.json"
 DOTFILES="${DOTFILES:-$HOME/dotfiles}"
 INSTRUCTIONS="$DOTFILES/agent-instructions.md"
 
 ln -sf "$DOTFILES/.bashrc" ~/.bashrc
 ln -sf "$DOTFILES/.vimrc" ~/.vimrc
 ln -sf "$DOTFILES/.tmux.conf" ~/.tmux.conf
+
+mkdir -p ~/.claude
+if [ ! -f "$CLAUDE_SETTINGS" ]; then
+    cp "$CLAUDE_TEMPLATE" "$CLAUDE_SETTINGS"
+    echo "Claude Code settings installed."
+elif command -v jq >/dev/null 2>&1; then
+    # One-way, top-level-only merge: dotfiles-managed keys (model, notifications, ...) always
+    # win; anything else already in the live file (e.g. permissions Claude wrote locally) is
+    # left alone and never flows back into the dotfiles repo. Only safe while the template stays
+    # flat: a future nested key here would replace the whole nested object, not merge inside it.
+    TMP="$(mktemp)"
+    if jq -s '.[0] + .[1]' "$CLAUDE_SETTINGS" "$CLAUDE_TEMPLATE" > "$TMP"; then
+        mv "$TMP" "$CLAUDE_SETTINGS"
+        echo "Claude Code settings merged (jq)."
+    else
+        rm -f "$TMP"
+        echo "jq merge failed (invalid JSON in $CLAUDE_SETTINGS?); left existing settings untouched."
+    fi
+elif command -v python3 >/dev/null 2>&1; then
+    if python3 - "$CLAUDE_SETTINGS" "$CLAUDE_TEMPLATE" <<'PY'
+import json, sys
+existing_path, template_path = sys.argv[1], sys.argv[2]
+with open(existing_path) as f:
+    existing = json.load(f)
+with open(template_path) as f:
+    template = json.load(f)
+existing.update(template)
+with open(existing_path, "w") as f:
+    json.dump(existing, f, indent=2)
+    f.write("\n")
+PY
+    then
+        echo "Claude Code settings merged (python3)."
+    else
+        echo "python3 merge failed (invalid JSON in $CLAUDE_SETTINGS?); left existing settings untouched."
+    fi
+else
+    cp "$CLAUDE_TEMPLATE" "$CLAUDE_SETTINGS"
+    echo "Neither jq nor python3 found; overwrote $CLAUDE_SETTINGS with dotfiles defaults (any local-only keys were lost)."
+fi
 
 PROJECT_ROOT="${DOTFILES_PROJECT_ROOT:-}"
 if [ -z "$PROJECT_ROOT" ] || [ ! -d "$PROJECT_ROOT" ]; then
@@ -30,7 +72,7 @@ else
     {
         cat <<'EOF'
 ---
-description: Pragmatic Craftsman engineering standards and Gilfoyle persona
+description: Pragmatic Craftsman engineering standards
 alwaysApply: true
 ---
 EOF
