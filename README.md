@@ -43,7 +43,18 @@ The merge tries `jq` first, then `python3`, since either is enough for the flat,
 
 The private key never enters the container. Instead, the host's `gpg-agent` SSH socket is bind-mounted into the container, and `SSH_AUTH_SOCK` is set to point at it. Git in the container signs via the forwarded socket.
 
-The socket path is hardcoded (`/run/user/1000/gnupg/S.gpg-agent.ssh`) rather than using `${localEnv:SSH_AUTH_SOCK}` because VS Code leaves that variable empty when it cold-launches a devcontainer without a prior WSL terminal session.
+The socket path is hardcoded rather than using `${localEnv:SSH_AUTH_SOCK}` because VS Code leaves that variable empty when it cold-launches a devcontainer without a prior WSL terminal session.
+
+Add these two keys to your **personal, gitignored** `devcontainer.json` override (not the shared base — the mount path is machine-specific and will break teammates who don't have this setup):
+
+```jsonc
+"mounts": [
+  "source=/run/user/1000/gnupg/S.gpg-agent.ssh,target=/run/ssh-agent.sock,type=bind"
+],
+"remoteEnv": {
+  "SSH_AUTH_SOCK": "/run/ssh-agent.sock"
+}
+```
 
 ### One-time host setup (WSL2)
 
