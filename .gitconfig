@@ -12,3 +12,17 @@
 [user]
     name = Austin Rhodes
     email = a18rhodes@gmail.com
+    signingkey = ~/.ssh/git_signing.pub
+
+[commit]
+    gpgsign = true
+
+[tag]
+    gpgsign = true
+
+[gpg]
+    format = ssh
+
+[gpg "ssh"]
+    allowedSignersFile = ~/.ssh/allowed_signers
+  

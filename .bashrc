@@ -29,3 +29,8 @@ cd (){
 
 # Make the prompt nice (User@Host:CurrentDir)
 PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+# SSH agent: point at the GPG agent's SSH socket (fixed path, available from WSL boot via linger)
+export SSH_AUTH_SOCK=/run/user/$(id -u)/gnupg/S.gpg-agent.ssh
+# Load signing key into agent silently; no-op if already loaded, silent fail if socket not up
+ssh-add -q ~/.ssh/git_signing 2>/dev/null

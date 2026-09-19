@@ -1,13 +1,18 @@
 #!/bin/bash
 
-CLAUDE_SETTINGS=~/.claude/settings.json
-CLAUDE_TEMPLATE="$DOTFILES/claude-settings.json"
 DOTFILES="${DOTFILES:-$HOME/dotfiles}"
 INSTRUCTIONS="$DOTFILES/agent-instructions.md"
+CLAUDE_SETTINGS=~/.claude/settings.json
+CLAUDE_TEMPLATE="$DOTFILES/claude-settings.json"
 
 ln -sf "$DOTFILES/.bashrc" ~/.bashrc
 ln -sf "$DOTFILES/.vimrc" ~/.vimrc
 ln -sf "$DOTFILES/.tmux.conf" ~/.tmux.conf
+
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+ln -sf "$DOTFILES/ssh/git_signing.pub" ~/.ssh/git_signing.pub
+ln -sf "$DOTFILES/ssh/allowed_signers" ~/.ssh/allowed_signers
 
 mkdir -p ~/.claude
 if [ ! -f "$CLAUDE_SETTINGS" ]; then

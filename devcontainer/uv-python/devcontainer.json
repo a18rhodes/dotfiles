@@ -29,5 +29,15 @@
   },
   "remoteUser": "vscode",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  // SSH agent forwarding: mount host GPG-agent SSH socket at a fixed container path.
+  // Fixed path avoids the ${localEnv:SSH_AUTH_SOCK} cold-launch problem (empty when
+  // VS Code opens a devcontainer without a prior WSL terminal session).
+  // Requires: loginctl enable-linger $USER on the host (one-time, see dotfiles README).
+  "mounts": [
+    "source=/run/user/1000/gnupg/S.gpg-agent.ssh,target=/run/ssh-agent.sock,type=bind"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/run/ssh-agent.sock"
+  }
 }
