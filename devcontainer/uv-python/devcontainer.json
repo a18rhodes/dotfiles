@@ -1,0 +1,33 @@
+{
+  "name": "${localWorkspaceFolderBasename} Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "target": "development",
+    "args": {
+      "WORKDIR": "/workspaces/${localWorkspaceFolderBasename}",
+      // Set to e.g. "--group dev --group test" to install dependency groups.
+      "UV_EXTRA_ARGS": ""
+    }
+  },
+  // Add project-specific setup after the &&, e.g. "&& pre-commit install"
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "remoteUser": "vscode",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}
