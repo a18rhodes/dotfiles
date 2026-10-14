@@ -92,20 +92,24 @@ EOF
     } > "$PROJECT_ROOT/.cursor/rules/craftsman.mdc"
     echo "Cursor rules injected."
 
-    GITIGNORE="$PROJECT_ROOT/.gitignore"
-    if [ -f "$GITIGNORE" ]; then
-        append_gitignore() {
+    # .git/info/exclude is a per-clone ignore list: never committed, so the injected files
+    # stay hidden without touching the project's shared .gitignore.
+    if [ -d "$PROJECT_ROOT/.git" ]; then
+        EXCLUDE="$PROJECT_ROOT/.git/info/exclude"
+        mkdir -p "$(dirname "$EXCLUDE")"
+        touch "$EXCLUDE"
+        append_exclude() {
             local pattern="$1"
             local comment="$2"
-            if ! grep -qF "$pattern" "$GITIGNORE"; then
-                echo "" >> "$GITIGNORE"
-                echo "$comment" >> "$GITIGNORE"
-                echo "$pattern" >> "$GITIGNORE"
+            if ! grep -qxF "$pattern" "$EXCLUDE"; then
+                echo "" >> "$EXCLUDE"
+                echo "$comment" >> "$EXCLUDE"
+                echo "$pattern" >> "$EXCLUDE"
             fi
         }
-        append_gitignore ".claude/*" "# Private AI instructions (Injected by Dotfiles)"
-        append_gitignore ".github/copilot-instructions.md" "# Private AI instructions (Injected by Dotfiles)"
-        append_gitignore ".cursor/*" "# Private AI instructions (Injected by Dotfiles)"
+        append_exclude ".claude/*" "# Private AI instructions (Injected by Dotfiles)"
+        append_exclude ".github/copilot-instructions.md" "# Private AI instructions (Injected by Dotfiles)"
+        append_exclude ".cursor/*" "# Private AI instructions (Injected by Dotfiles)"
     fi
 fi
 
