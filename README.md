@@ -26,7 +26,7 @@ Personal shell, editor, and AI-agent configuration, kept in one place and re-app
 - `.github/copilot-instructions.md` (GitHub Copilot, applies workspace-wide)
 - `.cursor/rules/craftsman.mdc` (Cursor; note plain `.md` files are ignored there, hence the frontmatter)
 
-All three are symlinks back to `agent-instructions.md`, so editing the one file updates every tool. If the target project has a `.gitignore`, `install.sh` also appends entries for these paths so the injected files don't get committed to the project's own repo.
+All three are symlinks back to `agent-instructions.md`, so editing the one file updates every tool. If the project is a git repo, `install.sh` also adds these paths to its `.git/info/exclude` (a per-clone ignore list that is never committed), so the injected files stay out of the project's repo without touching its shared `.gitignore`.
 
 ## Claude Code settings
 
@@ -46,13 +46,15 @@ The merge tries `jq` first, then `python3`, since either is enough for the flat,
 
 The private key never enters the container. Instead, a dedicated `ssh-agent` runs on the WSL host and its socket is bind-mounted into the container. Git in the container signs via the forwarded socket — the private key bytes never leave the host.
 
-The socket path is hardcoded rather than using `${localEnv:SSH_AUTH_SOCK}` because VS Code leaves that variable empty when it cold-launches a devcontainer without a prior WSL terminal session. `loginctl enable-linger` (see below) ensures the agent is running from WSL boot so the socket is always there when VS Code arrives.
+The socket path is fixed (`~/.ssh/agent.sock`) rather than using `${localEnv:SSH_AUTH_SOCK}` because VS Code leaves that variable empty when it cold-launches a devcontainer without a prior WSL terminal session; `${localEnv:HOME}` is always set. `loginctl enable-linger` (see below) ensures the agent is running from WSL boot so the socket is always there when VS Code arrives.
+
+The socket deliberately lives under `$HOME`, not `/run/user/<uid>`: under WSL2, WSLg mounts a second tmpfs over `/run/user/<uid>` after systemd's, which hides a socket the agent created in the lower one. Docker then finds nothing at the mount source and creates an empty root-owned directory there, and signing fails in the container with `No private key found for public key`. (The same overlay hides `/run/user/<uid>/bus`, which is why `systemctl --user` can fail with "Failed to connect to bus".)
 
 Add these two keys to your **personal, gitignored** `devcontainer.json` override for each project (not the shared base — the mount path is machine-specific and will break teammates who don't have this setup):
 
 ```jsonc
 "mounts": [
-  "source=/run/user/1000/ssh-agent.socket,target=/run/ssh-agent.sock,type=bind"
+  "source=${localEnv:HOME}/.ssh/agent.sock,target=/run/ssh-agent.sock,type=bind"
 ],
 "remoteEnv": {
   "SSH_AUTH_SOCK": "/run/ssh-agent.sock"

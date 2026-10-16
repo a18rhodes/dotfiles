@@ -4,7 +4,11 @@ Documentation=man:ssh-agent(1)
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/ssh-agent -D -a /run/user/%U/ssh-agent.socket
+# Socket lives in $HOME, not /run/user/%U: under WSL2, WSLg mounts a second tmpfs over
+# /run/user/<uid> after systemd's, hiding anything created in the lower one.
+# Remove a stale socket first; ssh-agent refuses to bind over an existing path.
+ExecStartPre=/bin/rm -f %h/.ssh/agent.sock
+ExecStart=/usr/bin/ssh-agent -D -a %h/.ssh/agent.sock
 
 [Install]
 WantedBy=default.target

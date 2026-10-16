@@ -32,6 +32,6 @@ PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
 # SSH agent: use existing socket if healthy (e.g. container remoteEnv), otherwise fall back to
 # the dedicated ssh-agent socket available from WSL boot when linger is enabled.
-[ -S "$SSH_AUTH_SOCK" ] || export SSH_AUTH_SOCK=/run/user/$(id -u)/ssh-agent.socket
+[ -S "$SSH_AUTH_SOCK" ] || export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
 # Load signing key into agent silently; no-op if already loaded, silent fail if socket not up
 ssh-add -q ~/.ssh/git_signing 2>/dev/null
